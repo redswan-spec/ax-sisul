@@ -1,0 +1,1643 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>서울시설공단 AI 전환 전략 대시보드 (v2.0 Light Theme)</title>
+  
+  <!-- Pretendard 폰트 불러오기 -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+  
+  <style>
+    /* ==========================================
+       CSS Variables & Reset (Light Theme)
+       ========================================== */
+    :root {
+      --bg-dark: #f8fafc;       /* 매우 연한 청회색 배경 (Slate 50) */
+      --bg-card: #ffffff;       /* 순수 흰색 카드 배경 */
+      --bg-card-hover: #f1f5f9; /* 카드 호버 시 연회색 (Slate 100) */
+      --border-color: #e2e8f0;   /* 차분한 연회색 경계선 (Slate 200) */
+      --border-glow: #007ac3;    /* 서울시설공단 공식 블루 */
+      
+      --text-main: #0f172a;     /* 진한 남색/검정 글자 (Slate 900) */
+      --text-muted: #334155;    /* 본문용 차분한 회색 (Slate 700) */
+      --text-dark: #64748b;     /* 보조 정보용 옅은 회색 (Slate 500) */
+      
+      --primary: #007ac3;       /* 서울시설공단 블루 */
+      --secondary: #00a896;     /* 서울시설공단 민트/그린 */
+      --accent-1: #0d9488;      /* 에메랄드/틸 (성공, 안전) */
+      --accent-2: #4f46e5;      /* 인디고 (거버넌스, 규제) */
+      --accent-3: #d97706;      /* 앰버/오렌지 (문화, 확산) */
+      
+      --font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      
+      --transition-fast: 0.2s ease;
+      --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      font-family: var(--font-family);
+      color: var(--text-main);
+      line-height: 1.6;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--primary);
+    }
+
+    /* Common Components */
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .glass-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 1.8rem;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+      transition: var(--transition-normal);
+    }
+
+    .glass-card:hover {
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(0, 122, 195, 0.06);
+    }
+
+    .gradient-text {
+      color: var(--primary);
+      font-weight: 800;
+    }
+
+    /* ==========================================
+       Header Section
+       ========================================== */
+    header {
+      margin-bottom: 2.5rem;
+      border-bottom: 3px solid var(--primary); /* 공단 시그니처 컬러 실선 */
+      padding-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+
+    .brand-area {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .badge {
+      display: inline-block;
+      align-self: flex-start;
+      background: rgba(0, 122, 195, 0.08);
+      border: 1px solid rgba(0, 122, 195, 0.25);
+      color: var(--primary);
+      padding: 0.25rem 0.7rem;
+      border-radius: 4px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+    }
+
+    .brand-title {
+      font-size: 2.1rem;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.5px;
+    }
+
+    .vision-box {
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.2rem;
+    }
+
+    .vision-label {
+      font-size: 0.8rem;
+      color: var(--text-dark);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    .vision-text {
+      font-size: 1.7rem;
+      font-weight: 800;
+      color: var(--primary);
+      text-shadow: none;
+      position: relative;
+      display: inline-block;
+    }
+
+    /* ==========================================
+       Dashboard Grid Layouts
+       ========================================== */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    @media (min-width: 1024px) {
+      .dashboard-grid-3 {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .dashboard-grid-4 {
+        grid-template-columns: repeat(4, 1fr);
+      }
+      .dashboard-grid-2-3 {
+        grid-template-columns: 2fr 3fr;
+      }
+      .dashboard-grid-3-2 {
+        grid-template-columns: 3.2fr 2.8fr;
+      }
+    }
+
+    /* TF Summary Block */
+    .tf-summary-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-left: 5px solid var(--primary);
+    }
+
+    .tf-summary-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .tf-info-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
+    .tf-info-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tf-info-label {
+      font-size: 0.8rem;
+      color: var(--text-dark);
+      font-weight: 600;
+    }
+
+    .tf-info-val {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    /* KPI Metrics Card */
+    .kpi-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+    }
+
+    .kpi-title {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .kpi-value-container {
+      display: flex;
+      align-items: baseline;
+      gap: 0.2rem;
+      margin: 0.3rem 0;
+    }
+
+    .kpi-value {
+      font-size: 2.7rem;
+      font-weight: 850;
+      line-height: 1;
+      font-family: 'Pretendard', sans-serif;
+    }
+
+    .kpi-card:nth-child(1) .kpi-value { color: var(--primary); }
+    .kpi-card:nth-child(2) .kpi-value { color: var(--secondary); }
+    .kpi-card:nth-child(3) .kpi-value { color: var(--accent-3); }
+    .kpi-card:nth-child(4) .kpi-value { color: var(--accent-2); }
+
+    .kpi-unit {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+
+    .kpi-desc {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+      border-top: 1px solid #f1f5f9;
+      padding-top: 0.6rem;
+      margin-top: 0.6rem;
+    }
+
+    /* ==========================================
+       Tab Navigation
+       ========================================== */
+    .tab-nav {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      overflow-x: auto;
+      padding-bottom: 0.4rem;
+      border-bottom: 2px solid #cbd5e1;
+    }
+
+    .tab-btn {
+      background: #e2e8f0;
+      border: 1px solid #cbd5e1;
+      color: var(--text-muted);
+      padding: 0.7rem 1.4rem;
+      border-radius: 6px 6px 0 0;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: var(--transition-fast);
+      margin-bottom: -2px;
+    }
+
+    .tab-btn:hover {
+      background: #cbd5e1;
+      color: var(--text-main);
+    }
+
+    .tab-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #ffffff;
+      box-shadow: none;
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s ease-out forwards;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* ==========================================
+       Section: Strategy Map & Ecosystem
+       ========================================== */
+    .section-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-left: 5px solid var(--primary);
+      padding-left: 0.8rem;
+      color: #0f172a;
+    }
+
+    /* Strategy Map Layout */
+    .strategy-map {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .strategy-pillar-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (min-width: 1024px) {
+      .strategy-pillar-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .pillar-card {
+      border-top: 4px solid var(--primary);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
+      background: #ffffff;
+    }
+
+    .pillar-card.p-external { border-top-color: var(--primary); }
+    .pillar-card.p-internal { border-top-color: var(--accent-2); }
+    .pillar-card.p-culture { border-top-color: var(--accent-3); }
+
+    .pillar-header {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      margin-bottom: 1rem;
+    }
+
+    .pillar-icon {
+      font-size: 1.4rem;
+      width: 40px;
+      height: 40px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pillar-card.p-external .pillar-icon { background: rgba(0, 122, 195, 0.08); color: var(--primary); }
+    .pillar-card.p-internal .pillar-icon { background: rgba(79, 70, 229, 0.08); color: var(--accent-2); }
+    .pillar-card.p-culture .pillar-icon { background: rgba(217, 119, 6, 0.08); color: var(--accent-3); }
+
+    .pillar-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .pillar-desc {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      min-height: 45px;
+    }
+
+    .pillar-items-title {
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--text-dark);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 0.8rem;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 0.4rem;
+    }
+
+    .pillar-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .pillar-item {
+      font-size: 0.88rem;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 0.7rem 0.9rem;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-muted);
+    }
+
+    .pillar-item::before {
+      content: '✓';
+      color: var(--primary);
+      font-weight: bold;
+      font-size: 0.8rem;
+    }
+    .pillar-card.p-internal .pillar-item::before { color: var(--accent-2); }
+    .pillar-card.p-culture .pillar-item::before { color: var(--accent-3); }
+
+    /* Circular Ecosystem Flow (CEO View) */
+    .ecosystem-container {
+      background: #ffffff;
+      padding: 2.2rem;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .ecosystem-desc-top {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+      max-width: 800px;
+    }
+
+    .ecosystem-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      position: relative;
+    }
+
+    @media (min-width: 768px) {
+      .ecosystem-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (min-width: 1200px) {
+      .ecosystem-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    .ecosystem-step-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1.4rem;
+      position: relative;
+      transition: var(--transition-normal);
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      height: 100%;
+    }
+
+    .ecosystem-step-card:hover {
+      border-color: var(--primary);
+      background: #f0f7ff;
+    }
+
+    .step-badge {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: 0.8px;
+    }
+
+    .step-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .step-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Connectors for ecosystem cards */
+    @media (min-width: 1200px) {
+      .ecosystem-step-card::after {
+        content: '→';
+        position: absolute;
+        right: -1.1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1.3rem;
+        color: #cbd5e1;
+        pointer-events: none;
+      }
+      .ecosystem-step-card:last-child::after {
+        content: '';
+      }
+    }
+
+    /* ==========================================
+       Section: Roadmap Timeline
+       ========================================== */
+    .roadmap-timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      position: relative;
+      padding-left: 1rem;
+    }
+
+    .roadmap-timeline::before {
+      content: '';
+      position: absolute;
+      left: 1.8rem;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: #cbd5e1; /* 정갈한 실선 */
+    }
+
+    .roadmap-node {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      position: relative;
+      padding-left: 3.5rem;
+    }
+
+    @media (min-width: 1024px) {
+      .roadmap-node {
+        grid-template-columns: 150px 1fr;
+        padding-left: 4.5rem;
+      }
+    }
+
+    .roadmap-marker {
+      position: absolute;
+      left: 1.25rem;
+      top: 0.8rem;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 4px solid var(--primary);
+      z-index: 2;
+    }
+
+    .roadmap-node:nth-child(2) .roadmap-marker { border-color: var(--accent-2); }
+    .roadmap-node:nth-child(3) .roadmap-marker { border-color: var(--accent-1); }
+
+    .roadmap-time-label {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+
+    .time-year {
+      font-size: 2rem;
+      font-weight: 900;
+      line-height: 1;
+      color: #0f172a;
+    }
+
+    .roadmap-node:nth-child(1) .time-year { color: var(--primary); }
+    .roadmap-node:nth-child(2) .time-year { color: var(--accent-2); }
+    .roadmap-node:nth-child(3) .time-year { color: var(--accent-1); }
+
+    .time-phase {
+      font-size: 0.9rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+    }
+
+    .roadmap-body {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.5rem;
+    }
+
+    .roadmap-goal {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .roadmap-goal::before {
+      content: '🎯';
+      font-size: 1rem;
+    }
+
+    .roadmap-tasks-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.2rem;
+    }
+
+    @media (min-width: 768px) {
+      .roadmap-tasks-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (min-width: 1200px) {
+      .roadmap-tasks-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    .roadmap-task-box {
+      background: #f8fafc;
+      border-left: 4px solid var(--primary);
+      padding: 0.8rem;
+      border-radius: 0 6px 6px 0;
+      border: 1px solid #e2e8f0;
+      border-left-width: 4px;
+    }
+
+    .roadmap-node:nth-child(1) .roadmap-task-box { border-left-color: var(--primary); }
+    .roadmap-node:nth-child(2) .roadmap-task-box { border-left-color: var(--accent-2); }
+    .roadmap-node:nth-child(3) .roadmap-task-box { border-left-color: var(--accent-1); }
+
+    .task-box-title {
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--text-dark);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.4rem;
+    }
+
+    .task-box-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+
+    /* ==========================================
+       Section: Detailed Tables (Academia, Governance, etc.)
+       ========================================== */
+    .detail-section-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Table Styling */
+    .table-container {
+      overflow-x: auto;
+      margin-bottom: 1.5rem;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.88rem;
+    }
+
+    th {
+      background: #f1f5f9;
+      color: var(--text-muted);
+      font-weight: 700;
+      padding: 0.9rem 1.2rem;
+      border-bottom: 2px solid #cbd5e1;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 0.9rem 1.2rem;
+      border-bottom: 1px solid #e2e8f0;
+      color: var(--text-muted);
+      vertical-align: middle;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: #f8fafc;
+    }
+
+    /* University Partnership Grid */
+    .univ-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    @media (min-width: 768px) {
+      .univ-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (min-width: 1200px) {
+      .univ-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .univ-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .univ-name {
+      font-size: 0.98rem;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .univ-fields {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Governance Grid */
+    .ethics-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.2rem;
+    }
+
+    @media (min-width: 768px) {
+      .ethics-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (min-width: 1200px) {
+      .ethics-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .ethics-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 1.2rem;
+      border-left: 4px solid var(--accent-2);
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .ethics-tag {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--accent-2);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .ethics-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .ethics-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Compliance Step block */
+    .compliance-timeline {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    @media (min-width: 768px) {
+      .compliance-timeline {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .compliance-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 1.2rem;
+      text-align: center;
+      position: relative;
+    }
+
+    .compliance-step {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--accent-1);
+      letter-spacing: 0.5px;
+      margin-bottom: 0.4rem;
+    }
+
+    .compliance-title {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 0.5rem;
+    }
+
+    .compliance-desc {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+
+    /* Culture Series Card */
+    .culture-card-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (min-width: 768px) {
+      .culture-card-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .culture-card {
+      background: #fdfaf7; /* 연한 살구/오렌지 빛 배경 */
+      border: 1px solid #f5e3d3;
+      border-top: 4px solid var(--accent-3);
+      border-radius: 8px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .culture-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .culture-card-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .culture-card-format {
+      font-size: 0.75rem;
+      font-weight: 800;
+      background: rgba(217, 119, 6, 0.08);
+      border: 1px solid rgba(217, 119, 6, 0.25);
+      color: var(--accent-3);
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+    }
+
+    .culture-card-desc {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* ==========================================
+       Footer Section
+       ========================================== */
+    footer {
+      margin-top: 4rem;
+      border-top: 1px solid var(--border-color);
+      padding-top: 2rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-dark);
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    /* ==========================================
+       Configuration Guide Block (For User Edit)
+       ========================================== */
+    .config-guide {
+      margin-top: 3rem;
+      border: 1px dashed #cbd5e1;
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 1.5rem;
+    }
+
+    .config-guide-title {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .config-guide-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .config-guide code {
+      background: #e2e8f0;
+      color: #005a9c;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- Header Section -->
+    <header id="header-container">
+      <!-- Generated Dynamically by JS -->
+    </header>
+
+    <!-- KPI Summary Section -->
+    <section class="dashboard-grid dashboard-grid-4" id="kpi-container">
+      <!-- Generated Dynamically by JS -->
+    </section>
+
+    <!-- Tab Navigation -->
+    <nav class="tab-nav">
+      <button class="tab-btn active" onclick="switchTab('tab-dashboard')">종합 대시보드</button>
+      <button class="tab-btn" onclick="switchTab('tab-roadmap')">통합 로드맵</button>
+      <button class="tab-btn" onclick="switchTab('tab-external')">외부 기술협업</button>
+      <button class="tab-btn" onclick="switchTab('tab-internal')">내부기반·거버넌스</button>
+      <button class="tab-btn" onclick="switchTab('tab-culture')">문화확산·생태계</button>
+    </nav>
+
+    <!-- TAB 1: 종합 대시보드 -->
+    <div id="tab-dashboard" class="tab-content active">
+      <div class="dashboard-grid dashboard-grid-3-2">
+        <!-- TF Summary info -->
+        <div class="glass-card tf-summary-card" id="tf-summary-container">
+          <!-- Generated Dynamically by JS -->
+        </div>
+
+        <!-- Ecosystem Circle Flow -->
+        <div class="ecosystem-container glass-card" style="grid-column: span 1;">
+          <h3 class="section-title">💡 AI 전환 선순환 실행체계</h3>
+          <div class="ecosystem-desc-top">
+            각 개별 추진 사업은 분리된 것이 아니라, **기술 발굴 ➔ 거버넌스 검증 ➔ 사내 확산 ➔ R&D 고도화**의 하나의 유기적인 연계 생태계로 연결됩니다.
+          </div>
+          <div class="ecosystem-grid" id="ecosystem-container">
+            <!-- Generated Dynamically by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Strategy Framework Map -->
+      <section class="glass-card strategy-map" style="margin-top: 2rem;">
+        <h3 class="section-title">🎯 AI 전환 3대 전략 체계</h3>
+        <div class="strategy-pillar-grid" id="strategy-pillars-container">
+          <!-- Generated Dynamically by JS -->
+        </div>
+      </section>
+    </div>
+
+    <!-- TAB 2: 통합 로드맵 -->
+    <div id="tab-roadmap" class="tab-content">
+      <div class="glass-card">
+        <h3 class="section-title">📅 중장기 AI 전환 로드맵 (2026 ~ 2028)</h3>
+        <div class="roadmap-timeline" id="roadmap-timeline-container">
+          <!-- Generated Dynamically by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: 외부 기술협업 -->
+    <div id="tab-external" class="tab-content">
+      <div class="dashboard-grid dashboard-grid-2-3">
+        <!-- Open Lab Process -->
+        <div class="glass-card">
+          <h3 class="detail-section-title">🧪 민간 AI 오픈랩(Open Lab) 운영</h3>
+          <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:1.2rem;">
+            민간 기업의 AI 기술을 공단 인프라에 직접 테스트하는 상시 개방형 테스트베드 플랫폼입니다.
+          </p>
+          
+          <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:0.5rem; color:var(--accent-1);">운영 단계 및 절차</h4>
+          <div style="display:flex; flex-direction:column; gap:0.8rem; margin-bottom:1.5rem;" id="openlab-process-container">
+            <!-- Generated Dynamically by JS -->
+          </div>
+
+          <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:0.5rem; color:var(--accent-1);">민간기업 주요 지원사항</h4>
+          <ul style="list-style:none; display:flex; flex-direction:column; gap:0.4rem; padding-left:0.2rem;" id="openlab-support-container">
+            <!-- Generated Dynamically by JS -->
+          </ul>
+        </div>
+
+        <!-- Academic Partnerships -->
+        <div class="glass-card">
+          <h3 class="detail-section-title">🏫 대학·연구기관 직접 협력 파트너십</h3>
+          <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:1.2rem;">
+            공단 사업 특성과 결합이 유망한 AI 연구분야를 중심으로 직접 맞춤형 매칭 및 R&D를 도모합니다.
+          </p>
+          <div class="univ-grid" id="univ-partnerships-container">
+            <!-- Generated Dynamically by JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: 내부기반·거버넌스 -->
+    <div id="tab-internal" class="tab-content">
+      <div class="glass-card" style="margin-bottom: 2rem;">
+        <h3 class="detail-section-title">🛡️ 공단형 AI 윤리 7대 원칙</h3>
+        <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:1.2rem;">
+          시민, 행정, 기술 3대 관점의 기준을 적용하여 기획부터 사후 관리까지 책임성 있는 공공 AI를 지향합니다.
+        </p>
+        <div class="ethics-grid" id="ethics-container">
+          <!-- Generated Dynamically by JS -->
+        </div>
+      </div>
+
+      <div class="dashboard-grid dashboard-grid-3-2">
+        <!-- Law & Compliance -->
+        <div class="glass-card">
+          <h3 class="detail-section-title">⚖️ 인공지능기본법 및 개인정보보호법 선제 대응</h3>
+          <div style="display:flex; flex-direction:column; gap:1.2rem;">
+            
+            <div>
+              <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:0.5rem; color:var(--accent-2);">1. 인공지능 기본법상 투명성 확보 조치</h4>
+              <div class="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>구분</th>
+                      <th>적용 범위</th>
+                      <th>핵심 이행사항</th>
+                    </tr>
+                  </thead>
+                  <tbody id="law-act-container">
+                    <!-- Generated Dynamically by JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div>
+              <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:0.4rem; color:var(--accent-2);" id="privacy-title-container">개인정보보호법 (자동화된 결정권)</h4>
+              <div class="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>권리 종류</th>
+                      <th>세부 권리 내용 및 조치 의무</th>
+                    </tr>
+                  </thead>
+                  <tbody id="privacy-act-container">
+                    <!-- Generated Dynamically by JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Compliance Process -->
+        <div class="glass-card">
+          <h3 class="detail-section-title">📋 AI 사업 단계별 투명성 이행 절차</h3>
+          <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:1.5rem;">
+            외부 자문위원회 피드백을 기반으로 사업 발주부터 완공 검수 단계까지 위험 요소를 필터링합니다.
+          </p>
+          <div class="compliance-timeline" id="compliance-process-container">
+            <!-- Generated Dynamically by JS -->
+          </div>
+
+          <div style="margin-top: 1.8rem; padding: 1rem; background: rgba(0, 122, 195, 0.05); border-left: 3px solid var(--primary); border-radius: 0 8px 8px 0; font-size: 0.82rem;">
+            <strong>💡 ISO 42001 (AI 경영시스템) 표준 도입 검토</strong><br>
+            향후 내부 거버넌스 체계의 신뢰성과 안전성을 국제 규격에 맞춰 인증받는 중장기 과제를 기획 및 준비 중입니다.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: 문화확산·생태계 -->
+    <div id="tab-culture" class="tab-content">
+      <div class="dashboard-grid dashboard-grid-2-3">
+        <!-- Culture Campaigns -->
+        <div class="glass-card">
+          <h3 class="detail-section-title">🌱 전사 AI 조직문화 확산 콘텐츠</h3>
+          <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:1.5rem;">
+            전 직원이 주저 없이 시도하고 배우는 'AI 실험실' 정서 형성을 지향합니다.
+          </p>
+          <div class="culture-card-grid" id="culture-campaigns-container">
+            <!-- Generated Dynamically by JS -->
+          </div>
+        </div>
+
+        <!-- Governance Stakeholders -->
+        <div class="glass-card">
+          <h3 class="detail-section-title">🔗 외부 거버넌스 연계 및 유관기관 협력체계</h3>
+          <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:1rem;">
+            중앙부처, 국가 연구기관, 서울시 산하 전문기관과의 다자간 협업 구조입니다.
+          </p>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:150px;">구분</th>
+                  <th style="width:180px;">기관명</th>
+                  <th>AI 관련 주요 역할 및 공단 연계사항</th>
+                </tr>
+              </thead>
+              <tbody id="stakeholders-container">
+                <!-- Generated Dynamically by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+   
+
+    <!-- Footer Section -->
+    <footer>
+      <p>서울시설공단 AI전환추진단(TF) 전략기획 대시보드 © 2026 Seoul Facilities Corporation</p>
+      <p style="font-size:0.75rem; color:var(--text-dark);">본 문서는 TF 연간 종합현황 v1.0(26.05.28) 기준 자료를 토대로 구성되었습니다.</p>
+    </footer>
+
+  </div>
+
+  <!-- =================================================================================
+       ★ [USER EDIT AREA] 아래의 DASHBOARD_DATA 값을 수정하면 대시보드 전체가 업데이트됩니다. ★
+       ================================================================================= -->
+  <script>
+    const DASHBOARD_DATA = {
+      // 1. 공단 비전 및 TF 개요
+      vision: "AI로 무장된 최초 지방공기업",
+      tfInfo: {
+        title: "서울시설공단 AI 전환 DashBoard ",
+        purpose: "공단 전사적 AI전환 추진을 위한 전담 임시조직",
+        structure: "경영전략본부 산하 처장급 임시조직 / 산하 1팀(AX팀)",
+        members: "총 5명 (단장 1, 팀장 1, 팀원 3)",
+        period: "2026. 1. 1. ~ 별도 명령 시까지",
+        history: [
+          { date: "2025.11.", event: "AI전환추진단(TF) 구성·운영 계획 수립 (이사장방침 제90호)" },
+          { date: "2026.01.", event: "AI전환추진단(TF) 공식 출범" },
+          { date: "2026.02.", event: "연간 AI전환추진단(TF) 운영계획 수립" },
+          { date: "2026.03.", event: "학계(연구기관) 대상 기술협력 제안 착수" },
+          { date: "2026.04.", event: "주요 대학 방문 협의, AI 오픈랩 플랫폼 운영 개시" },
+          { date: "2026.05.", event: "AI 오픈랩 상시 접수 운영 및 대학 협의 지속" }
+        ]
+      },
+
+      // 2. 상단 핵심 성과 지표 (KPI) 카드
+      kpis: [
+        { title: "협업 파트너 대학", value: "9", unit: "개교", desc: "서울대, 카이스트, 한양대 등 9개 대학 및 연구소와 기술협력 미팅 수행" },
+        { title: "AI 오픈랩 접수", value: "7", unit: "건", desc: "민간 스타트업 대상 테스트베드 환경 제공 및 기술 제안 상시 접수" },
+        { title: "국가 R&D 연계", value: "1", unit: "건(예정)", desc: "국토교통부 차회 과제 기획 추진<br> 상반기 국토교통부 AX-sprint 서류통과 1건은 최종적으로 <u>탈락</u>" },
+        { title: "서울형 R&D 연계 ", value: "1", unit: "건(예정)", desc: "피지컬 AI관련 민관학 컨소시엄 구성 추진예정(7월)" }
+      ],
+
+      // 3. 전략 3대 체계 기둥
+      pillars: [
+        {
+          title: "외부 기술협업",
+          icon: "⚡",
+          class: "p-external",
+          desc: "공단 현장을 민간·학계 테스트베드로 제공하여 최첨단 AI 실증 기회 및 신규 R&D 모델을 공동 발굴합니다.",
+          details: [
+            "대학·연구소 맞춤형 협력 제안 및 실증 연계",
+            "AI 오픈랩 플랫폼을 통한 민간 우수기술 상시 매칭",
+            "수요처 기반 국가 R&D 공동 연구 및 공모사업 참여"
+          ]
+        },
+        {
+          title: "내부기반 확립",
+          icon: "🛡️",
+          class: "p-internal",
+          desc: "윤리원칙 수립과 선제적인 법제도 대응 프로세스를 구축하여 안전하고 신뢰할 수 있는 공공 AI 기반을 조성합니다.",
+          details: [
+            "시민·행정·기술 관점의 7대 AI 윤리원칙 마련",
+            "인공지능 기본법 및 개인정보보호법 자동화 결정 대응",
+            "ISO 42001 (AI 경영시스템) 도입 및 국제인증 검토"
+          ]
+        },
+        {
+          title: "전사적 문화 확산",
+          icon: "🌱",
+          class: "p-culture",
+          desc: "정보 제공 위주 교육에서 탈피해 실제 사내 활용사례 중심의 경험 교류와 AI 실험실 분위기를 구축합니다.",
+          details: [
+            "직원 AI 활용사례 중심,  '공감 시리즈' 운영",
+            "AI를 통한 일하는 방식 개선,  '실험 시리즈' 제작",
+            "작은 성공은 물론 실패 경험도 자산화, 전사적 AI 내재화"
+          ]
+        }
+      ],
+
+      // 4. 선순환 실행체계 흐름 (CEO 뷰)
+      ecosystemFlow: {
+        title: "AI 전환 선순환 실행체계 (The Connected Ecosystem)",
+        steps: [
+          { phase: "01. 기술 실증 (In/Out-bound)", title: "오픈랩 & 대학 협업", desc: "민간 스타트업 및 대학이 제안한 혁신 AI 기술을 공단 현장 인프라와 데이터에 매칭하여 실증 수행" },
+          { phase: "02. 리스크 관리", title: "AI 거버넌스 검증", desc: "AI 윤리원칙 자율 체크리스트 및 법제도(투명성, 자동화결정권) 점검으로 공공성의 안전장치 마련" },
+          { phase: "03. 내재화 및 확산", title: "내부 문화 확산", desc: "실증 성과를 카드뉴스와 숏폼 등으로 전사 공유하고, 직원들이 직접 활용할 수 있도록 AI 실험실 문화 조성" },
+          { phase: "04. 확장 및 고도화", title: "민관학 R&D 연계", desc: "성공적으로 검증된 공공 특화 AI 비즈니스 모델을 국가 R&D 및 표준모델 확산사업으로 확대 전개" }
+        ]
+      },
+
+      // 5. 중장기 3단계 로드맵
+      roadmap: [
+        {
+          year: "2026",
+          phase: "기반기",
+          goal: "AI 전환을 위한 기반 구축",
+          tasks: {
+            external: "학계·민간 대상 협력 채널 구축, 실증 착수 (오픈랩 본격 가동)",
+            internal: "AI 거버넌스 기반 검토, 인공지능 기본법 등 법·제도 선제 대응",
+            culture: "AI 실험실 문화 장려, 초기 활용 확산 프로그램 운영",
+            performance: "AI 활용사업 분석 및 성과관리 기반 마련"
+          }
+        },
+        {
+          year: "2027",
+          phase: "확산기",
+          goal: "AI 활용 내재화 및 전사 확산",
+          tasks: {
+            external: "실증성과 공단 내 횡단전개, 국가 R&D 연계 확대",
+            internal: "공단 맞춤형 AI 운영기준 구체화, ISO 42001 국제표준 인증 획득 검토",
+            culture: "전사 AI 활용역량 강화 교육, 우수사례 공유 및 전파",
+            performance: "AI 활용성과 심층 분석, 공공 표준모델 발굴 및 확산"
+          }
+        },
+        {
+          year: "2028",
+          phase: "고도화기",
+          goal: "공공부문 AI 선도모델 구현",
+          tasks: {
+            external: "공동연구 성과 대외 확산 및 지능형 협력체계 고도화",
+            internal: "공단 전반의 AI 운영체계 및 안전 관리기준 정착",
+            culture: "전사 차원의 AI 활용문화 완전 내재화 및 일상화",
+            performance: "공단 AI 성과관리체계 구축 및 우수 표준모델 정착"
+          }
+        }
+      ],
+
+      // 6. 협업 파트너 대학 상세 리스트
+      academicPartnerships: [
+        { univ: "한양대학교", fields: "퍼스널 모빌리티 및 로봇 기반 이동 지원, CCTV 영상 활용 이상 상황 분석 및 밀집도 관리 등" },
+        { univ: "동국대학교", fields: "LLM 기반 멀티모달 및 강화학습, AIoT, 온디바이스, 3D 스캐닝, 디지털트윈 기반 시설 운영" },
+        { univ: "경희대학교", fields: "디지털트윈 기반 시설관리, 설명가능 AI, AI 에이전트 자동화, CCTV 군중 행동 분석" },
+        { univ: "서울대학교", fields: "도시 데이터 기반 모델링 및 서울 지역 특화 공공 데이터 기반의 특화형 AI 모델 구축" },
+        { univ: "카이스트(KAIST)", fields: "컴퓨터 비전, 영상처리 및 객체 검출 기술, 이미지를 통한 3차원 입체 복원 모델 개발" },
+        { univ: "중앙대학교", fields: "멀티모달 데이터 통합 분석(이미지·음성·텍스트·영상), 컴퓨터 비전과 자연어 결합 서비스" },
+        { univ: "연세대학교", fields: "CCTV 영상 분석 기반 행동 예측, 저품질 3D 데이터 고품질 복원, AI 수학적 안전 분석" },
+        { univ: "성균관대학교", fields: "모바일 환경 내 분산형 AI 에이전트, 다양한 엣지 디바이스 연동 기술 연구" },
+        { univ: "인하대학교", fields: "생성형 AI 기반 미디어 복원 및 생성, 저작권 보호 기술, 개인정보 비식별화 처리" }
+      ],
+
+      // 7. AI 오픈랩(Open Lab) 상세
+      openLab: {
+        process: [
+          { step: "모집·홍보", desc: "AI 오픈랩 전용 웹페이지를 상시 운영하고 스타트업 및 벤처 기업을 적극 타겟팅" },
+          { step: "접수·선발", desc: "온라인 상시 기술 제안을 접수하여 외부 자문위원 심사 및 관련 사업 부서와의 조율 수행" },
+          { step: "매칭·실증", desc: "선정과제 조건에 맞는 현장 테스트베드 매칭 후 안전 및 공공 서비스 영향을 우선 조율해 현장 실증" },
+          { step: "성과 확산", desc: "실증 성과의 목표 달성도를 계량화 분석하여 우수 사례에 한해 후속 협력 및 국가 R&D 연계 검토" }
+        ],
+        support: [
+          "공단 보유 데이터(비공개·비정형 자료) 제공 및 사업현장 테스트베드 인프라 전폭 개방",
+          "기술 실증 시 현장 실무 부서 인터뷰 및 지속적 피드백 제공",
+          "공단 명의의 실증 및 협업 완료 확인서 공식 발급 (초기 실적 레퍼런스 증명)",
+          "※ 재정 지원: 별도 현금 지원 없음 (실증 인프라 및 자원 제공 중심 파트너십)"
+        ]
+      },
+
+      // 8. AI 윤리 7대 원칙
+      ethicsPrinciples: [
+        { category: "시민 관점", title: "공공성", desc: "공익과 시민의 복리 증진을 최우선 판단 기준으로 정하여 안전하고 유용한 AI를 기획합니다." },
+        { category: "시민 관점", title: "공정성·형평성", desc: "알고리즘의 잠재적 편향 및 특정 취약계층에 대한 차별적 영향을 사전에 검토하고 예방합니다." },
+        { category: "시민 관점", title: "고용영향 고려", desc: "AI 도입으로 인한 직무 변화를 분석하여 구성원들의 기술 재교육과 사내 적응을 조직적으로 지원합니다." },
+        { category: "행정 관점", title: "투명성", desc: "행정 결정 시 AI의 알고리즘 원리, 사용 데이터 범위 등을 최대한 투명하게 공유하여 설명 가능성을 높입니다." },
+        { category: "행정 관점", title: "책임성", desc: "모든 AI 추천 결과에 대해 최종적인 판단과 행동의 책임은 공단의 관리자가 갖는 것을 원칙으로 합니다." },
+        { category: "기술 관점", title: "안전성", desc: "알고리즘 오동작, 보안 취약점 등 발생 가능한 위해 요소를 시스템 설계부터 점검합니다." },
+        { category: "기술 관점", title: "프라이버시 보호", desc: "업무 수행 시 개인정보 및 최소수집의 법칙을 엄수하고 민감정보 비식별화 처리를 상시 감시합니다." }
+      ],
+
+      // 9. 컴플라이언스 및 규제 대응
+      governanceCompliance: {
+        aiAct: [
+          { duty: "사전고지 의무", target: "고영향·생성형 AI 서비스 제공 시", content: "AI 시스템에 기반해 운용되고 있다는 사실을 이용자에게 의무적으로 명시하여 고지 (위반 시 과태료)" },
+          { duty: "생성물 표시 의무", target: "생성형 AI 사용 제품·서비스", content: "생성형 AI를 이용해 제작된 디지털 결과물임을 이용자가 즉각 직관적으로 인지할 수 있는 워터마크 표시" },
+          { duty: "딥페이크 고지 의무", target: "AI 딥페이크 기반 제작물 유통", content: "인공지능을 통해 임의 가공 또는 합성된 가상 정보임을 텍스트, 음성 등으로 투명하게 표기" }
+        ],
+        privacyAct: {
+          title: "자동화된 결정에 대한 정보주체 권리 대응 (개인정보보호법 제37조의2)",
+          rights: [
+            { name: "정보주체 거부권", desc: "완전 자동화된 시스템(AI)을 통한 결정이 권리·의무에 중대 변화를 일으키는 경우, 이를 거부할 권리 보장" },
+            { name: "설명 요구권", desc: "해당 자동결정의 구체적 산출 로직, 기준, 주요 사용 데이터 등에 대해 신속하고 알아듣기 쉬운 해설을 요구할 권리" },
+            { name: "공단의 의무사항", desc: "정당한 거부·설명 요구 시 거절 불가하며, 자동결정 미적용 조치 및 휴먼 검토를 통한 재결정 제공" }
+          ]
+        },
+        complianceProcess: [
+          { step: "사전검토 단계", desc: "도입하려는 AI 모델의 고영향 AI 여부, 생성형 AI 의무 적용 대상 여부를 법리 및 자문위원회 확인" },
+          { step: "계약 단계", desc: "입찰 시 투명성 설명자료 제출을 정식 명기하고, 공급자로부터 이행서약서 징구 및 계약서 내 하도급 명시" },
+          { step: "준공·검수 단계", desc: "실제 시민 배포 화면을 대상으로 딥페이크 고지 문구 및 생성형 AI 식별자 마킹 등 이행 여부 현장 확인" }
+        ]
+      },
+
+      // 10. 사내 문화확산 캠페인
+      cultureCampaign: [
+        { title: "「공감 시리즈」 <br>나도 써봤어요!", format: "스토리텔링형 카드뉴스", desc: "AI를 전혀 모르던 직원이 실무(기획서 작성, 보고서 요약 등)에 AI 툴을 접목하여 성공한 스토리 및 구체적 가이드라인을 정기 발행" },
+        { title: "「실험 시리즈」<br>AI, 어디까지 되나?", format: "숏폼 비디오 및 캡처 가이드", desc: "실무진들이 수시로 겪는 까다로운 업무 시나리오를 가정한 뒤, AI 챗봇에게 입력하는 구체적인 프롬프트 작성 팁 및 화면 변화를 숏폼으로 제작·전파" }
+      ],
+
+      // 11. 외부 거버넌스 관계기관 매핑
+      stakeholders: [
+        { category: "정부부처", name: "과학기술정보통신부", desc: "국가 인공지능 정책 총괄 부서로서 관련 법·제도 가이드라인 수립 주도" },
+        { category: "전문기관", name: "한국지능정보사회진흥원(NIA)", desc: "공공부문 초거대 AI 도입 컨설팅 및 표준 프레임워크 지원" },
+        { category: "전문기관", name: "한국인터넷진흥원(KISA)", desc: "AI 기술 도입 시의 보안 취약점 점검 및 개인정보 비식별화 가이드 수립" },
+        { category: "정부부처 / 진흥원", name: "국토교통부 / KAIA", desc: "공단 스마트 도로시설 연계 국가 R&D 실증 과제(AX-sprint 사업) 연계" },
+        { category: "서울시 시정", name: "디지털도시국 (디지털정책과)", desc: "서울형 AI 윤리기준 가이드 배포 및 시 산하 기관 AI 전환 성과 총괄 평가" },
+        { category: "서울시 컨트롤타워", name: "서울시 인공지능위원회", desc: "공단 주요 사업의 기술적 적격성 및 대규모 인프라 도입 타당성 자문 협력" },
+        { category: "서울시 전문기관", name: "서울AI재단", desc: "도시형 혁신 과제 실증 매칭 지원 (AI브릿지 플랫폼 협업 파트너)" }
+      ]
+    };
+
+    // =================================================================================
+    // 렌더링 엔진 (Vanilla Javascript로 DASHBOARD_DATA를 파싱해 HTML을 채움)
+    // =================================================================================
+    
+    function renderDashboard() {
+      // 1. Header 렌더링
+      const headerContainer = document.getElementById('header-container');
+      headerContainer.innerHTML = `
+        <div class="brand-area">
+          <span class="badge">Strategy Planning Partner</span>
+          <h1 class="brand-title">${DASHBOARD_DATA.tfInfo.title}</h1>
+        </div>
+        <div class="vision-box">
+          <span class="vision-label">Vision</span>
+          <span class="vision-text">${DASHBOARD_DATA.vision}</span>
+        </div>
+      `;
+
+      // 2. KPI 렌더링
+      const kpiContainer = document.getElementById('kpi-container');
+      kpiContainer.innerHTML = DASHBOARD_DATA.kpis.map(kpi => `
+        <div class="glass-card kpi-card">
+          <span class="kpi-title">${kpi.title}</span>
+          <div class="kpi-value-container">
+            <span class="kpi-value">${kpi.value}</span>
+            <span class="kpi-unit">${kpi.unit}</span>
+          </div>
+          <p class="kpi-desc">${kpi.desc}</p>
+        </div>
+      `).join('');
+
+      // 3. TF 요약 정보 렌더링
+      const tfSummaryContainer = document.getElementById('tf-summary-container');
+      tfSummaryContainer.innerHTML = `
+        <div>
+          <h3 class="tf-summary-title">🏛️ ${DASHBOARD_DATA.tfInfo.title}</h3>
+          <ul class="tf-info-list">
+            <li class="tf-info-item">
+              <span class="tf-info-label">설립 목적</span>
+              <span class="tf-info-val">${DASHBOARD_DATA.tfInfo.purpose}</span>
+            </li>
+            <li class="tf-info-item">
+              <span class="tf-info-label">조직 구성</span>
+              <span class="tf-info-val">${DASHBOARD_DATA.tfInfo.structure}</span>
+            </li>
+            <li class="tf-info-item">
+              <span class="tf-info-label">운영 인력</span>
+              <span class="tf-info-val">${DASHBOARD_DATA.tfInfo.members}</span>
+            </li>
+            <li class="tf-info-item">
+              <span class="tf-info-label">운영 기간</span>
+              <span class="tf-info-val">${DASHBOARD_DATA.tfInfo.period}</span>
+            </li>
+          </ul>
+        </div>
+        <div style="margin-top: 1.5rem; border-top: 2px solid #cbd5e1; padding-top: 1rem;">
+          <span style="font-size:0.75rem; font-weight:800; color:var(--text-dark); text-transform:uppercase; letter-spacing:1.2px; display:block; margin-bottom:0.5rem;">추진 경과</span>
+          <div style="display:flex; flex-direction:column; gap:0.4rem; max-height: 120px; overflow-y: auto; padding-right:0.3rem;">
+            ${DASHBOARD_DATA.tfInfo.history.map(h => `
+              <div style="display:flex; font-size:0.8rem; gap:0.6rem;">
+                <span style="color:var(--primary); font-weight:800; min-width:55px;">${h.date}</span>
+                <span style="color:var(--text-muted);">${h.event}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+
+      // 4. 선순환 실행체계 흐름 렌더링
+      const ecosystemContainer = document.getElementById('ecosystem-container');
+      ecosystemContainer.innerHTML = DASHBOARD_DATA.ecosystemFlow.steps.map(step => `
+        <div class="ecosystem-step-card">
+          <span class="step-badge">${step.phase}</span>
+          <h4 class="step-title">${step.title}</h4>
+          <p class="step-desc">${step.desc}</p>
+        </div>
+      `).join('');
+
+      // 5. 3대 전략 체계 기둥 렌더링
+      const strategyPillarsContainer = document.getElementById('strategy-pillars-container');
+      strategyPillarsContainer.innerHTML = DASHBOARD_DATA.pillars.map(pillar => `
+        <div class="glass-card pillar-card ${pillar.class}">
+          <div>
+            <div class="pillar-header">
+              <div class="pillar-icon">${pillar.icon}</div>
+              <h4 class="pillar-title">${pillar.title}</h4>
+            </div>
+            <p class="pillar-desc">${pillar.desc}</p>
+          </div>
+          <div>
+            <span class="pillar-items-title">주요 실행 과제</span>
+            <ul class="pillar-list">
+              ${pillar.details.map(detail => `
+                <li class="pillar-item">${detail}</li>
+              `).join('')}
+            </ul>
+          </div>
+        </div>
+      `).join('');
+
+      // 6. 중장기 로드맵 타임라인 렌더링
+      const roadmapContainer = document.getElementById('roadmap-timeline-container');
+      roadmapContainer.innerHTML = DASHBOARD_DATA.roadmap.map(node => `
+        <div class="roadmap-node">
+          <div class="roadmap-marker"></div>
+          <div class="roadmap-time-label">
+            <span class="time-year">${node.year}</span>
+            <span class="time-phase">${node.phase}</span>
+          </div>
+          <div class="roadmap-body">
+            <h4 class="roadmap-goal">${node.goal}</h4>
+            <div class="roadmap-tasks-grid">
+              <div class="roadmap-task-box">
+                <span class="task-box-title">외부 협업</span>
+                <p class="task-box-desc">${node.tasks.external}</p>
+              </div>
+              <div class="roadmap-task-box">
+                <span class="task-box-title">내부 거버넌스</span>
+                <p class="task-box-desc">${node.tasks.internal}</p>
+              </div>
+              <div class="roadmap-task-box">
+                <span class="task-box-title">문화 확산</span>
+                <p class="task-box-desc">${node.tasks.culture}</p>
+              </div>
+              <div class="roadmap-task-box">
+                <span class="task-box-title">성과 관리</span>
+                <p class="task-box-desc">${node.tasks.performance}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      // 7. 오픈랩 운영 절차 및 지원사항 렌더링
+      const openlabProcessContainer = document.getElementById('openlab-process-container');
+      openlabProcessContainer.innerHTML = DASHBOARD_DATA.openLab.process.map((p, idx) => `
+        <div style="display:flex; gap:0.8rem; background:#ffffff; border:1px solid #e2e8f0; padding:0.8rem; border-radius:6px; align-items:center;">
+          <span style="font-size:1.1rem; font-weight:900; color:var(--accent-1); min-width:25px;">0${idx+1}</span>
+          <div>
+            <strong style="font-size:0.88rem; display:block; color:var(--text-main);">${p.step}</strong>
+            <span style="font-size:0.8rem; color:var(--text-muted);">${p.desc}</span>
+          </div>
+        </div>
+      `).join('');
+
+      const openlabSupportContainer = document.getElementById('openlab-support-container');
+      openlabSupportContainer.innerHTML = DASHBOARD_DATA.openLab.support.map(s => {
+        const isNote = s.startsWith('※');
+        const color = isNote ? 'var(--text-dark)' : 'var(--text-muted)';
+        const style = isNote ? 'font-style:italic; font-size:0.78rem;' : 'font-size:0.83rem;';
+        return `
+          <li style="display:flex; gap:0.5rem; ${style} color:${color}; line-height:1.4; margin-bottom:0.4rem;">
+            <span>${isNote ? '•' : '✓'}</span>
+            <span>${s}</span>
+          </li>
+        `;
+      }).join('');
+
+      // 8. 대학 직접 파트너십 렌더링
+      const univContainer = document.getElementById('univ-partnerships-container');
+      univContainer.innerHTML = DASHBOARD_DATA.academicPartnerships.map(univ => `
+        <div class="univ-card">
+          <span class="univ-name">${univ.univ}</span>
+          <span class="univ-fields">${univ.fields}</span>
+        </div>
+      `).join('');
+
+      // 9. AI 윤리 7대 원칙 렌더링
+      const ethicsContainer = document.getElementById('ethics-container');
+      ethicsContainer.innerHTML = DASHBOARD_DATA.ethicsPrinciples.map(rule => `
+        <div class="ethics-card">
+          <span class="ethics-tag">${rule.category}</span>
+          <h4 class="ethics-title">${rule.title}</h4>
+          <p class="ethics-desc">${rule.desc}</p>
+        </div>
+      `).join('');
+
+      // 10. AI법 및 개인정보보호법 렌더링
+      const lawActContainer = document.getElementById('law-act-container');
+      lawActContainer.innerHTML = DASHBOARD_DATA.governanceCompliance.aiAct.map(act => `
+        <tr>
+          <td style="font-weight:800; color:var(--primary);">${act.duty}</td>
+          <td style="color:var(--text-muted);">${act.target}</td>
+          <td>${act.content}</td>
+        </tr>
+      `).join('');
+
+      const privacyTitleContainer = document.getElementById('privacy-title-container');
+      privacyTitleContainer.innerText = DASHBOARD_DATA.governanceCompliance.privacyAct.title;
+
+      const privacyActContainer = document.getElementById('privacy-act-container');
+      privacyActContainer.innerHTML = DASHBOARD_DATA.governanceCompliance.privacyAct.rights.map(r => `
+        <tr>
+          <td style="font-weight:800; color:var(--accent-2); width:130px;">${r.name}</td>
+          <td>${r.desc}</td>
+        </tr>
+      `).join('');
+
+      // 11. 거버넌스 단계별 절차 렌더링
+      const complianceProcessContainer = document.getElementById('compliance-process-container');
+      complianceProcessContainer.innerHTML = DASHBOARD_DATA.governanceCompliance.complianceProcess.map((proc, idx) => `
+        <div class="compliance-box">
+          <div class="compliance-step">STAGE 0${idx+1}</div>
+          <h4 class="compliance-title">${proc.step}</h4>
+          <p class="compliance-desc">${proc.desc}</p>
+        </div>
+      `).join('');
+
+      // 12. 문화 확산 콘텐츠 렌더링
+      const cultureCampaignsContainer = document.getElementById('culture-campaigns-container');
+      cultureCampaignsContainer.innerHTML = DASHBOARD_DATA.cultureCampaign.map(camp => `
+        <div class="culture-card">
+          <div class="culture-card-header">
+            <h4 class="culture-card-title">${camp.title}</h4>
+           
+          </div>
+          <p class="culture-card-desc">${camp.desc}</p>
+        </div>
+      `).join('');
+
+      // 13. 유관기관 매핑 테이블 렌더링
+      const stakeholdersContainer = document.getElementById('stakeholders-container');
+      stakeholdersContainer.innerHTML = DASHBOARD_DATA.stakeholders.map(s => `
+        <tr>
+          <td style="font-weight:800; color:var(--accent-3);">${s.category}</td>
+          <td style="font-weight:800; color:var(--text-main);">${s.name}</td>
+          <td style="color:var(--text-muted);">${s.desc}</td>
+        </tr>
+      `).join('');
+    }
+
+    // =================================================================================
+    // 탭 듀얼 제어 함수 (Tab switching logic)
+    // =================================================================================
+    function switchTab(tabId) {
+      // 모든 탭 컨텐츠 숨기기
+      const contents = document.querySelectorAll('.tab-content');
+      contents.forEach(content => content.classList.remove('active'));
+
+      // 모든 탭 버튼 비활성화
+      const buttons = document.querySelectorAll('.tab-btn');
+      buttons.forEach(btn => btn.classList.remove('active'));
+
+      // 선택된 탭 활성화
+      document.getElementById(tabId).classList.add('active');
+
+      // 클릭한 버튼 활성화
+      const clickedBtn = Array.from(buttons).find(btn => btn.getAttribute('onclick').includes(tabId));
+      if (clickedBtn) {
+        clickedBtn.classList.add('active');
+      }
+    }
+
+    // 초기 실행
+    window.addEventListener('DOMContentLoaded', () => {
+      renderDashboard();
+    });
+  </script>
+</body>
+</html>
