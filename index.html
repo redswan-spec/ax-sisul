@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>서울시설공단 AI 전환 전략 대시보드 (v2.0 Light Theme)</title>
+  <title>서울시설공단 AI 전환 전략 대시보드 (실시간 시트 연동)</title>
   
   <!-- Pretendard 폰트 불러오기 -->
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
@@ -929,45 +929,74 @@
       flex-direction: column;
       gap: 0.5rem;
     }
-
     /* ==========================================
-       Configuration Guide Block (For User Edit)
+       Live Bar (Google Sheets 실시간 연동)
        ========================================== */
-    .config-guide {
-      margin-top: 3rem;
-      border: 1px dashed #cbd5e1;
-      background: #f8fafc;
-      border-radius: 8px;
-      padding: 1.5rem;
-    }
-
-    .config-guide-title {
-      font-size: 1rem;
-      font-weight: 800;
-      color: var(--primary);
-      margin-bottom: 0.6rem;
+    .live-bar {
       display: flex;
       align-items: center;
-      gap: 0.4rem;
-    }
-
-    .config-guide-desc {
+      gap: 0.6rem;
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 0.6rem 1rem;
+      margin-bottom: 1.5rem;
       font-size: 0.85rem;
       color: var(--text-muted);
-      line-height: 1.5;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+      flex-wrap: wrap;
     }
-
-    .config-guide code {
-      background: #e2e8f0;
-      color: #005a9c;
-      padding: 0.2rem 0.4rem;
-      border-radius: 4px;
-      font-family: monospace;
+    .live-dot { width: 9px; height: 9px; border-radius: 50%; background: #cbd5e1; flex-shrink: 0; }
+    .live-dot.loading { background: var(--accent-3); animation: liveBlink 1s infinite; }
+    .live-dot.ok { background: var(--accent-1); }
+    .live-dot.error { background: #dc2626; }
+    @keyframes liveBlink { 50% { opacity: 0.35; } }
+    .live-spacer { flex: 1; }
+    .live-link { color: var(--primary); font-weight: 700; text-decoration: none; font-size: 0.85rem; }
+    .live-link:hover { text-decoration: underline; }
+    .live-refresh {
+      background: var(--primary);
+      border: 1px solid var(--primary);
+      color: #ffffff;
+      padding: 0.45rem 1rem;
+      border-radius: 6px;
       font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: var(--font-family);
+      transition: var(--transition-fast);
     }
-  .data-asof-line { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.35rem; }
-      .sheet-edit-link { color: var(--primary); font-weight: 700; text-decoration: none; border-bottom: 1px dashed var(--primary); }
-      .sheet-edit-link:hover { text-decoration: underline; }
+    .live-refresh:hover { background: #0069a8; }
+    #loading-overlay {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.8rem;
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 3rem 1rem;
+      margin-bottom: 2rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .live-spinner {
+      width: 22px; height: 22px;
+      border: 3px solid #e2e8f0;
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: liveSpin 0.9s linear infinite;
+    }
+    @keyframes liveSpin { to { transform: rotate(360deg); } }
+    #error-box {
+      display: none;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 10px;
+      padding: 2rem 1.5rem;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -978,6 +1007,28 @@
     <header id="header-container">
       <!-- Generated Dynamically by JS -->
     </header>
+
+    <!-- Live Bar: Google Sheets 실시간 연동 상태 -->
+    <div class="live-bar">
+      <span class="live-dot loading" id="live-dot"></span>
+      <span id="live-status">시트에서 불러오는 중...</span>
+      <span class="live-spacer"></span>
+      <a class="live-link" id="sheet-open-link" href="#" target="_blank">📊 데이터 시트 열기</a>
+      <button class="live-refresh" onclick="refreshDashboard()">🔄 새로고침</button>
+    </div>
+
+    <div id="loading-overlay">
+      <div class="live-spinner"></div>
+      <span>시트에서 데이터를 불러오는 중입니다...</span>
+    </div>
+
+    <div id="error-box">
+      <div style="font-size:1.1rem; font-weight:800; color:#dc2626; margin-bottom:0.5rem;">⚠️ 데이터를 불러오지 못했습니다</div>
+      <div id="error-msg" style="font-size:0.88rem; color:#7f1d1d; margin-bottom:1rem;"></div>
+      <div style="font-size:0.82rem; color:var(--text-muted); margin-bottom:1.2rem;">데이터 시트의 공유 설정이 '링크가 있는 모든 사용자(읽기)'로 되어 있는지 확인해 주세요.</div>
+      <button class="live-refresh" onclick="refreshDashboard()">다시 시도</button>
+    </div>
+
 
     <!-- KPI Summary Section -->
     <section class="dashboard-grid dashboard-grid-4" id="kpi-container">
@@ -1005,7 +1056,7 @@
         <div class="ecosystem-container glass-card" style="grid-column: span 1;">
           <h3 class="section-title">💡 AI 전환 선순환 실행체계</h3>
           <div class="ecosystem-desc-top">
-            각 개별 추진 사업은 분리된 것이 아니라, **기술 발굴 ➔ 거버넌스 검증 ➔ 사내 확산 ➔ R&D 고도화**의 하나의 유기적인 연계 생태계로 연결됩니다.
+            각 개별 추진 사업은 분리된 것이 아니라, <strong>기술 발굴 ➔ 거버넌스 검증 ➔ 사내 확산 ➔ R&D 고도화</strong>의 하나의 유기적인 연계 생태계로 연결됩니다.
           </div>
           <div class="ecosystem-grid" id="ecosystem-container">
             <!-- Generated Dynamically by JS -->
@@ -1037,13 +1088,19 @@
       <div class="dashboard-grid dashboard-grid-2-3">
         <!-- Open Lab Process -->
         <div class="glass-card">
-          <h3 class="detail-section-title">🧪 민간 AI 오픈랩(Open Lab) 운영</h3>
+          <h3 class="detail-section-title">🧪 AI 오픈랩(Open Lab) 운영 <a href="https://sisul.or.kr/ai" style="text-decoration: none;" target=_blank>🔗</a></h3>
           <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:1.2rem;">
             민간 기업의 AI 기술을 공단 인프라에 직접 테스트하는 상시 개방형 테스트베드 플랫폼입니다.
           </p>
           
           <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:0.5rem; color:var(--accent-1);">운영 단계 및 절차</h4>
           <div style="display:flex; flex-direction:column; gap:0.8rem; margin-bottom:1.5rem;" id="openlab-process-container">
+            <!-- Generated Dynamically by JS -->
+          </div>
+
+          <!-- AI 오픈랩 실증 적격 선정 과제 (7월 선정 내역) -->
+          <h4 style="font-size:0.9rem; font-weight:700; margin-top:1.5rem; margin-bottom:0.5rem; color:var(--accent-1);">🏆 AI 오픈랩 실증 적격 선정 과제 (7월 선정)</h4>
+          <div style="display:flex; flex-direction:column; gap:0.8rem; margin-bottom:1.5rem;" id="openlab-selected-container">
             <!-- Generated Dynamically by JS -->
           </div>
 
@@ -1055,7 +1112,7 @@
 
         <!-- Academic Partnerships -->
         <div class="glass-card">
-          <h3 class="detail-section-title">🏫 대학·연구기관 직접 협력 파트너십</h3>
+          <h3 class="detail-section-title" style="display:flex;align-items:center;gap:0.6rem;">🏫 대학·연구기관 직접 협력 파트너십 <a href="#" onclick="openUniversityDashboard(event)" style="text-decoration: none;" title="대학협력회의자료 v2 열기">🔗</a></h3>
           <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:1.2rem;">
             공단 사업 특성과 결합이 유망한 AI 연구분야를 중심으로 직접 맞춤형 매칭 및 R&D를 도모합니다.
           </p>
@@ -1085,14 +1142,14 @@
           <div style="display:flex; flex-direction:column; gap:1.2rem;">
             
             <div>
-              <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:0.5rem; color:var(--accent-2);">1. 인공지능 기본법상 투명성 확보 조치</h4>
+              <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:0.5rem; color:var(--accent-2);">투명성 및 고영향 AI 의무대응 (인공지능기본법)</h4>
               <div class="table-container">
                 <table>
                   <thead>
                     <tr>
-                      <th>구분</th>
-                      <th>적용 범위</th>
-                      <th>핵심 이행사항</th>
+                      <th style="width: 150px;">구분</th>
+                      <th style="width: 180px;">적용 범위</th>
+                      <th>핵심 이행사항 및 의무내용</th>
                     </tr>
                   </thead>
                   <tbody id="law-act-container">
@@ -1108,7 +1165,7 @@
                 <table>
                   <thead>
                     <tr>
-                      <th>권리 종류</th>
+                      <th style="width: 150px;">권리 종류</th>
                       <th>세부 권리 내용 및 조치 의무</th>
                     </tr>
                   </thead>
@@ -1122,7 +1179,7 @@
           </div>
         </div>
 
-        <!-- Compliance Process -->
+        <!-- Compliance Process & Operational Guide -->
         <div class="glass-card">
           <h3 class="detail-section-title">📋 AI 사업 단계별 투명성 이행 절차</h3>
           <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:1.5rem;">
@@ -1132,10 +1189,29 @@
             <!-- Generated Dynamically by JS -->
           </div>
 
-          <div style="margin-top: 1.8rem; padding: 1rem; background: rgba(0, 122, 195, 0.05); border-left: 3px solid var(--primary); border-radius: 0 8px 8px 0; font-size: 0.82rem;">
-            <strong>💡 ISO 42001 (AI 경영시스템) 표준 도입 검토</strong><br>
-            향후 내부 거버넌스 체계의 신뢰성과 안전성을 국제 규격에 맞춰 인증받는 중장기 과제를 기획 및 준비 중입니다.
+          <!-- AI 실증협업 운영체계 주요 내용 가이드 테이블 -->
+          <div style="margin-top: 1.8rem; padding: 1.2rem; background: rgba(0, 122, 195, 0.03); border: 1px solid rgba(0, 122, 195, 0.15); border-left: 5px solid var(--primary); border-radius: 0 8px 8px 0;">
+            <strong style="font-size: 0.9rem; color: var(--primary); display: block; margin-bottom: 0.8rem;">🛡️ AI 실증협업 운영체계 주요 내용 (기준·지침)</strong>
+            <div class="table-container" style="margin-bottom: 0;">
+              <table style="font-size: 0.82rem;">
+                <thead>
+                  <tr>
+                    <th style="width: 120px; padding: 0.5rem 0.8rem;">구분</th>
+                    <th style="padding: 0.5rem 0.8rem;">세부 가이드라인 및 조치사항</th>
+                  </tr>
+                </thead>
+                <tbody id="verification-guide-container">
+                  <!-- Generated Dynamically by JS -->
+                </tbody>
+              </table>
+            </div>
           </div>
+
+          <div style="margin-top: 1.2rem; padding: 1rem; background: rgba(0, 122, 195, 0.05); border-left: 3px solid var(--primary); border-radius: 0 8px 8px 0; font-size: 0.82rem;">
+            <strong>💡 ISO 42001 (AI 경영시스템) 표준 도입 검토</strong><br>
+            향후 내부 거버넌스 체계의 신뢰성과 안전성을 국제 규격에 맞춰 인증받는 중장기 과제 준비중
+          </div>
+
         </div>
       </div>
     </div>
@@ -1176,563 +1252,46 @@
           </div>
         </div>
       </div>
-    </div>
 
-   
+      <!-- 행정안전부 공공 AI역량 교육과정 진행 현황 섹션 -->
+      <div class="glass-card" style="margin-top: 2rem;">
+        <h3 class="detail-section-title">🎓 행정안전부 공공 AI역량 교육과정 진행 현황 (8월말 기준)</h3>
+        <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:1rem;">
+          공단 임직원의 AI 리더십 및 실무 역량 강화를 위해 NIA 연계 교육과정에 적극 동참하고 있습니다.
+        </p>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>과정명</th>
+                <th>교육일자</th>
+                <th>교육대상</th>
+                <th>정원</th>
+                <th>공단 참여</th>
+                <th>상태</th>
+              </tr>
+            </thead>
+            <tbody id="education-container">
+              <!-- Generated Dynamically by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
     <!-- Footer Section -->
     <footer>
       <p>서울시설공단 AI전환추진단(TF) 전략기획 대시보드 © 2026 Seoul Facilities Corporation</p>
-      <p style="font-size:0.75rem; color:var(--text-dark);">본 문서는 TF 연간 종합현황 v1.0(26.05.28) 기준 자료를 토대로 구성되었습니다.</p>
     </footer>
 
   </div>
 
   <!-- =================================================================================
-       ★ [USER EDIT AREA] 아래의 DASHBOARD_DATA 값을 수정하면 대시보드 전체가 업데이트됩니다. ★
+       ★ Google Sheets 실시간 연동 — 데이터 수정은 구글 시트에서! (HTML 재생성 불필요) ★
        ================================================================================= -->
-  <script>
-    const DASHBOARD_DATA = {
-      // 1. 공단 비전 및 TF 개요
-      vision: "AI로 무장된 서울시설공단",
-      dataAsOf: "2026년 8월 말 기준 (종합현황 2026.9) · AI 전환 중장기 추진계획 2026.9.23",
-      tfInfo: {
-        title: "서울시설공단 AI 전환 DashBoard ",
-        purpose: "공단 전사적 AI전환 추진을 위한 전담 임시조직",
-        structure: "경영전략본부 산하 처장급 임시조직 / 산하 1팀(AX팀)",
-        members: "총 5명 (단장 1, 팀장 1, 팀원 3)",
-        period: "2026. 1. 1. ~ 별도 명령 시까지",
-        history: [
-          { date: "2025.11.", event: "AI전환추진단(TF) 구성·운영 계획 수립 (이사장방침 제90호)" },
-          { date: "2026.01.", event: "AI전환추진단(TF) 공식 출범" },
-          { date: "2026.02.", event: "연간 AI전환추진단(TF) 운영계획 수립" },
-          { date: "2026.03.", event: "학계(연구기관) 대상 기술협력 제안 착수" },
-          { date: "2026.04.", event: "주요 대학 방문 협의, AI 오픈랩 플랫폼 운영 개시" },
-          { date: "2026.05.", event: "AI 오픈랩 상시 접수 운영 및 대학 협의 지속" },
-          { date: "2026.06.", event: "오픈랩 1차 심사 준비, AI 기본법 투명성 이행방안·AI 실증 가이드라인 마련" },
-          { date: "2026.07.", event: "오픈랩 1차 심사 실시, 실증 적격 2건 선정 (설명회 등 후속조치)" },
-          { date: "2026.08.", event: "오픈랩 접수방법 메일 전송으로 변경, 실증추진부서 사전 설명·교육 시행" },
-          { date: "2026.09.", event: "AI 전환 중장기 추진계획 결재(9.23), 상시제안·수시심사 체제 전환" }
-        ]
-      },
+  
 
-      // 2. 상단 핵심 성과 지표 (KPI) 카드
-      kpis: [
-        { title: "협업 파트너 대학", value: "9", unit: "개교", desc: "9개 대학 15명 교수에 AI 기술협력 직접 제안" },
-        { title: "AI 오픈랩 접수", value: "11", unit: "건", desc: "1차 심사로 실증 적격 2건 선정, 상시제안·수시심사 체제 운영" },
-        { title: "실증 선정 과제", value: "2", unit: "건", desc: "노후시설 거동데이터 분석 / ESS 충·방전 최적화" },
-        { title: "AI 챔피언 인증", value: "3", unit: "명", desc: "초급 2명·중급 1명 (공공 AI 역량교육 5명 이수)" }
-      ],
-
-      // 3. 전략 3대 체계 기둥
-      pillars: [
-        {
-          title: "외부 기술협업",
-          icon: "⚡",
-          class: "p-external",
-          desc: "공단 현장을 민간·학계 테스트베드로 제공하여 최첨단 AI 실증 기회 및 신규 R&D 모델을 공동 발굴합니다.",
-          details: [
-            "대학·연구소 맞춤형 협력 제안 및 실증 연계",
-            "AI 오픈랩 플랫폼을 통한 민간 우수기술 상시 매칭",
-            "수요처 기반 국가 R&D 공동 연구 및 공모사업 참여"
-          ]
-        },
-        {
-          title: "내부기반 확립",
-          icon: "🛡️",
-          class: "p-internal",
-          desc: "윤리원칙 수립과 선제적인 법제도 대응 프로세스를 구축하여 안전하고 신뢰할 수 있는 공공 AI 기반을 조성합니다.",
-          details: [
-            "시민·행정·기술 관점의 7대 AI 윤리원칙 마련",
-            "인공지능 기본법 및 개인정보보호법 자동화 결정 대응",
-            "ISO 42001 (AI 경영시스템) 도입 및 국제인증 검토"
-          ]
-        },
-        {
-          title: "전사적 문화 확산",
-          icon: "🌱",
-          class: "p-culture",
-          desc: "정보 제공 위주 교육에서 탈피해 실제 사내 활용사례 중심의 경험 교류와 AI 실험실 분위기를 구축합니다.",
-          details: [
-            "직원 AI 활용사례 중심,  '공감 시리즈' 운영",
-            "AI를 통한 일하는 방식 개선,  '실험 시리즈' 제작",
-            "작은 성공은 물론 실패 경험도 자산화, 전사적 AI 내재화"
-          ]
-        }
-      ],
-
-      // 4. 선순환 실행체계 흐름 (CEO 뷰)
-      ecosystemFlow: {
-        title: "AI 전환 선순환 실행체계 (The Connected Ecosystem)",
-        steps: [
-          { phase: "01. 기술 실증 (In/Out-bound)", title: "오픈랩 & 대학 협업", desc: "민간 스타트업 및 대학이 제안한 혁신 AI 기술을 공단 현장 인프라와 데이터에 매칭하여 실증 수행" },
-          { phase: "02. 리스크 관리", title: "AI 거버넌스 검증", desc: "AI 윤리원칙 자율 체크리스트 및 법제도(투명성, 자동화결정권) 점검으로 공공성의 안전장치 마련" },
-          { phase: "03. 내재화 및 확산", title: "내부 문화 확산", desc: "실증 성과를 카드뉴스와 숏폼 등으로 전사 공유하고, 직원들이 직접 활용할 수 있도록 AI 실험실 문화 조성" },
-          { phase: "04. 확장 및 고도화", title: "민관학 R&D 연계", desc: "성공적으로 검증된 공공 특화 AI 비즈니스 모델을 국가 R&D 및 표준모델 확산사업으로 확대 전개" }
-        ]
-      },
-
-      // 5. 중장기 3단계 로드맵
-      roadmap: [
-        {
-          year: "2026",
-          phase: "기반기",
-          goal: "AI 전환을 위한 기반 구축",
-          tasks: {
-            external: "학계·민간 대상 협력 채널 구축, 실증 착수 (오픈랩 본격 가동)",
-            internal: "AI 거버넌스 기반 검토, 인공지능 기본법 등 법·제도 선제 대응",
-            culture: "AI 실험실 문화 장려, 초기 활용 확산 프로그램 운영",
-            performance: "AI 활용사업 분석 및 성과관리 기반 마련"
-          }
-        },
-        {
-          year: "2027",
-          phase: "확산기",
-          goal: "AI 활용 내재화 및 전사 확산",
-          tasks: {
-            external: "실증성과 공단 내 횡단전개, 국가 R&D 연계 확대",
-            internal: "공단 맞춤형 AI 운영기준 구체화, ISO 42001 국제표준 인증 획득 검토",
-            culture: "전사 AI 활용역량 강화 교육, 우수사례 공유 및 전파",
-            performance: "AI 활용성과 심층 분석, 공공 표준모델 발굴 및 확산"
-          }
-        },
-        {
-          year: "2028",
-          phase: "고도화기",
-          goal: "공공부문 AI 선도모델 구현",
-          tasks: {
-            external: "공동연구 성과 대외 확산 및 지능형 협력체계 고도화",
-            internal: "공단 전반의 AI 운영체계 및 안전 관리기준 정착",
-            culture: "전사 차원의 AI 활용문화 완전 내재화 및 일상화",
-            performance: "공단 AI 성과관리체계 구축 및 우수 표준모델 정착"
-          }
-        }
-      ],
-
-      // 6. 협업 파트너 대학 상세 리스트
-      academicPartnerships: [
-        { univ: "한양대학교", fields: "퍼스널 모빌리티 및 로봇 기반 이동 지원, CCTV 영상 활용 이상 상황 분석 및 밀집도 관리 등" },
-        { univ: "동국대학교", fields: "LLM 기반 멀티모달 및 강화학습, AIoT, 온디바이스, 3D 스캐닝, 디지털트윈 기반 시설 운영" },
-        { univ: "경희대학교", fields: "디지털트윈 기반 시설관리, 설명가능 AI, AI 에이전트 자동화, CCTV 군중 행동 분석" },
-        { univ: "서울대학교", fields: "도시 데이터 기반 모델링 및 서울 지역 특화 공공 데이터 기반의 특화형 AI 모델 구축" },
-        { univ: "카이스트(KAIST)", fields: "컴퓨터 비전, 영상처리 및 객체 검출 기술, 이미지를 통한 3차원 입체 복원 모델 개발" },
-        { univ: "중앙대학교", fields: "멀티모달 데이터 통합 분석(이미지·음성·텍스트·영상), 컴퓨터 비전과 자연어 결합 서비스" },
-        { univ: "연세대학교", fields: "CCTV 영상 분석 기반 행동 예측, 저품질 3D 데이터 고품질 복원, AI 수학적 안전 분석" },
-        { univ: "성균관대학교", fields: "모바일 환경 내 분산형 AI 에이전트, 다양한 엣지 디바이스 연동 기술 연구" },
-        { univ: "인하대학교", fields: "생성형 AI 기반 미디어 복원 및 생성, 저작권 보호 기술, 개인정보 비식별화 처리" }
-      ],
-
-      // 7. AI 오픈랩(Open Lab) 상세
-      openLab: {
-        process: [
-          { step: "모집·홍보", desc: "AI 오픈랩 전용 웹페이지를 상시 운영하고 스타트업 및 벤처 기업을 적극 타겟팅" },
-          { step: "접수·선발", desc: "온라인 상시 기술 제안을 접수하여 외부 자문위원 심사 및 관련 사업 부서와의 조율 수행" },
-          { step: "매칭·실증", desc: "선정과제 조건에 맞는 현장 테스트베드 매칭 후 안전 및 공공 서비스 영향을 우선 조율해 현장 실증" },
-          { step: "성과 확산", desc: "실증 성과의 목표 달성도를 계량화 분석하여 우수 사례에 한해 후속 협력 및 국가 R&D 연계 검토" }
-        ],
-        support: [
-          "공단 보유 데이터(비공개·비정형 자료) 제공 및 사업현장 테스트베드 인프라 전폭 개방",
-          "기술 실증 시 현장 실무 부서 인터뷰 및 지속적 피드백 제공",
-          "공단 명의의 실증 및 협업 완료 확인서 공식 발급 (초기 실적 레퍼런스 증명)",
-          "※ 재정 지원: 별도 현금 지원 없음 (실증 인프라 및 자원 제공 중심 파트너십)"
-        ]
-      },
-
-      // 8. AI 윤리 7대 원칙
-      ethicsPrinciples: [
-        { category: "시민 관점", title: "공공성", desc: "공익과 시민의 복리 증진을 최우선 판단 기준으로 정하여 안전하고 유용한 AI를 기획합니다." },
-        { category: "시민 관점", title: "공정성·형평성", desc: "알고리즘의 잠재적 편향 및 특정 취약계층에 대한 차별적 영향을 사전에 검토하고 예방합니다." },
-        { category: "시민 관점", title: "고용영향 고려", desc: "AI 도입으로 인한 직무 변화를 분석하여 구성원들의 기술 재교육과 사내 적응을 조직적으로 지원합니다." },
-        { category: "행정 관점", title: "투명성", desc: "행정 결정 시 AI의 알고리즘 원리, 사용 데이터 범위 등을 최대한 투명하게 공유하여 설명 가능성을 높입니다." },
-        { category: "행정 관점", title: "책임성", desc: "모든 AI 추천 결과에 대해 최종적인 판단과 행동의 책임은 공단의 관리자가 갖는 것을 원칙으로 합니다." },
-        { category: "기술 관점", title: "안전성", desc: "알고리즘 오동작, 보안 취약점 등 발생 가능한 위해 요소를 시스템 설계부터 점검합니다." },
-        { category: "기술 관점", title: "프라이버시 보호", desc: "업무 수행 시 개인정보 및 최소수집의 법칙을 엄수하고 민감정보 비식별화 처리를 상시 감시합니다." }
-      ],
-
-      // 9. 컴플라이언스 및 규제 대응
-      governanceCompliance: {
-        aiAct: [
-          { duty: "사전고지 의무", target: "고영향·생성형 AI 서비스 제공 시", content: "AI 시스템에 기반해 운용되고 있다는 사실을 이용자에게 의무적으로 명시하여 고지 (위반 시 과태료)" },
-          { duty: "생성물 표시 의무", target: "생성형 AI 사용 제품·서비스", content: "생성형 AI를 이용해 제작된 디지털 결과물임을 이용자가 즉각 직관적으로 인지할 수 있는 워터마크 표시" },
-          { duty: "딥페이크 고지 의무", target: "AI 딥페이크 기반 제작물 유통", content: "인공지능을 통해 임의 가공 또는 합성된 가상 정보임을 텍스트, 음성 등으로 투명하게 표기" }
-        ],
-        privacyAct: {
-          title: "자동화된 결정에 대한 정보주체 권리 대응 (개인정보보호법 제37조의2)",
-          rights: [
-            { name: "정보주체 거부권", desc: "완전 자동화된 시스템(AI)을 통한 결정이 권리·의무에 중대 변화를 일으키는 경우, 이를 거부할 권리 보장" },
-            { name: "설명 요구권", desc: "해당 자동결정의 구체적 산출 로직, 기준, 주요 사용 데이터 등에 대해 신속하고 알아듣기 쉬운 해설을 요구할 권리" },
-            { name: "공단의 의무사항", desc: "정당한 거부·설명 요구 시 거절 불가하며, 자동결정 미적용 조치 및 휴먼 검토를 통한 재결정 제공" }
-          ]
-        },
-        complianceProcess: [
-          { step: "사전검토 단계", desc: "도입하려는 AI 모델의 고영향 AI 여부, 생성형 AI 의무 적용 대상 여부를 법리 및 자문위원회 확인" },
-          { step: "계약 단계", desc: "입찰 시 투명성 설명자료 제출을 정식 명기하고, 공급자로부터 이행서약서 징구 및 계약서 내 하도급 명시" },
-          { step: "준공·검수 단계", desc: "실제 시민 배포 화면을 대상으로 딥페이크 고지 문구 및 생성형 AI 식별자 마킹 등 이행 여부 현장 확인" }
-        ]
-      },
-
-      // 10. 사내 문화확산 캠페인
-      cultureCampaign: [
-        { title: "「공감 시리즈」 <br>나도 써봤어요!", format: "스토리텔링형 카드뉴스", desc: "AI를 전혀 모르던 직원이 실무(기획서 작성, 보고서 요약 등)에 AI 툴을 접목하여 성공한 스토리 및 구체적 가이드라인을 정기 발행" },
-        { title: "「실험 시리즈」<br>AI, 어디까지 되나?", format: "숏폼 비디오 및 캡처 가이드", desc: "실무진들이 수시로 겪는 까다로운 업무 시나리오를 가정한 뒤, AI 챗봇에게 입력하는 구체적인 프롬프트 작성 팁 및 화면 변화를 숏폼으로 제작·전파" },
-        { title: "2026.07 EP.01<br>「우리의 AI, 그렇게 시작되었습니다」", format: "카드뉴스", desc: "AI 전환 추진 경과와 오픈랩 1차 심사 소식을 담은 첫 번째 공감 시리즈" },
-        { title: "2026.08 EP.02<br>「AI를 활용한 업무 인수인계 TiP」", format: "카드뉴스", desc: "AI를 활용한 업무 인수인계 노하우를 공유한 두 번째 공감 시리즈" }
-      ],
-
-      // 11. 외부 거버넌스 관계기관 매핑
-      stakeholders: [
-        { category: "정부부처", name: "과학기술정보통신부", desc: "국가 인공지능 정책 총괄 부서로서 관련 법·제도 가이드라인 수립 주도" },
-        { category: "전문기관", name: "한국지능정보사회진흥원(NIA)", desc: "공공부문 초거대 AI 도입 컨설팅 및 표준 프레임워크 지원" },
-        { category: "전문기관", name: "한국인터넷진흥원(KISA)", desc: "AI 기술 도입 시의 보안 취약점 점검 및 개인정보 비식별화 가이드 수립" },
-        { category: "정부부처 / 진흥원", name: "국토교통부 / KAIA", desc: "공단 스마트 도로시설 연계 국가 R&D 실증 과제(AX-sprint 사업) 연계" },
-        { category: "서울시 시정", name: "디지털도시국 (디지털정책과)", desc: "서울형 AI 윤리기준 가이드 배포 및 시 산하 기관 AI 전환 성과 총괄 평가" },
-        { category: "서울시 컨트롤타워", name: "서울시 인공지능위원회", desc: "공단 주요 사업의 기술적 적격성 및 대규모 인프라 도입 타당성 자문 협력" },
-        { category: "서울시 전문기관", name: "서울AI재단", desc: "도시형 혁신 과제 실증 매칭 지원 (AI브릿지 플랫폼 협업 파트너)" }
-      ]
-    };
-
-    // =================================================================================
-    // 렌더링 엔진 (Vanilla Javascript로 DASHBOARD_DATA를 파싱해 HTML을 채움)
-    // =================================================================================
-    
-    // ===== Google Sheets 실시간 연동 =====
-      // 대시보드 수치는 아래 시트에서 읽어옵니다. 시트 값을 수정하면 대시보드에 자동 반영됩니다.
-      const SHEET_ID = '1de4IoJK2EZ-kpDAqgh1I5MnNANMmotj-K-aov1WUgzY';
-      const SHEET_EDIT_URL = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/edit';
-      const SHEET_TABS = { kpi: 0, history: 251431502, culture: 112122582, meta: 900965771 };
-
-      function parseSheetCSV(text) {
-        const rows = [];
-        let row = [], field = '', inQ = false;
-        for (let i = 0; i < text.length; i++) {
-          const c = text[i];
-          if (inQ) {
-            if (c === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else { inQ = false; } }
-            else { field += c; }
-          } else if (c === '"') { inQ = true; }
-          else if (c === ',') { row.push(field); field = ''; }
-          else if (c === '\n' || c === '\r') {
-            if (c === '\r' && text[i + 1] === '\n') { i++; }
-            row.push(field); field = '';
-            if (row.length > 1 || row[0] !== '') { rows.push(row); }
-            row = [];
-          } else { field += c; }
-        }
-        if (field !== '' || row.length) { row.push(field); rows.push(row); }
-        return rows;
-      }
-
-      async function fetchSheetCSV(gid) {
-        const url = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?tqx=out:csv&gid=' + gid;
-        const ctrl = new AbortController();
-        const timer = setTimeout(() => ctrl.abort(), 8000);
-        try {
-          const res = await fetch(url, { signal: ctrl.signal });
-          if (!res.ok) { return null; }
-          return parseSheetCSV(await res.text());
-        } catch (e) { return null; }
-        finally { clearTimeout(timer); }
-      }
-
-      function sheetRowsToObjects(rows) {
-        if (!rows || rows.length < 2) { return null; }
-        const header = rows[0];
-        return rows.slice(1).map(r => {
-          const o = {};
-          header.forEach((h, idx) => { o[h] = (r[idx] || '').trim(); });
-          return o;
-        }).filter(o => Object.values(o).some(v => v));
-      }
-
-      async function syncFromSheet() {
-        try {
-          const [kpiRows, histRows, cultRows, metaRows] = await Promise.all([
-            fetchSheetCSV(SHEET_TABS.kpi),
-            fetchSheetCSV(SHEET_TABS.history),
-            fetchSheetCSV(SHEET_TABS.culture),
-            fetchSheetCSV(SHEET_TABS.meta)
-          ]);
-          const kpis = sheetRowsToObjects(kpiRows);
-          if (kpis && kpis.length) {
-            DASHBOARD_DATA.kpis = kpis.map(r => ({ title: r['지표명'], value: r['값'], unit: r['단위'], desc: r['설명'] }));
-          }
-          const hist = sheetRowsToObjects(histRows);
-          if (hist && hist.length) {
-            DASHBOARD_DATA.tfInfo.history = hist.map(r => ({ date: r['시기'], event: r['내용'] }));
-          }
-          const cult = sheetRowsToObjects(cultRows);
-          if (cult && cult.length) {
-            DASHBOARD_DATA.cultureCampaign = cult.map(r => ({ title: r['제목'], format: r['형식'], desc: r['설명'] }));
-          }
-          const meta = sheetRowsToObjects(metaRows);
-          if (meta && meta.length) {
-            meta.forEach(r => {
-              if (r['항목'] === '비전' && r['값']) { DASHBOARD_DATA.vision = r['값']; }
-              if (r['항목'] === '데이터 기준일' && r['값']) { DASHBOARD_DATA.dataAsOf = r['값']; }
-            });
-          }
-        } catch (e) { /* 시트 연동 실패 시 내장 기본 데이터로 렌더링 */ }
-      }
-
-      async function initDashboard() {
-        await syncFromSheet();
-        renderDashboard();
-      }
-
-      function renderDashboard() {
-      // 1. Header 렌더링
-      const headerContainer = document.getElementById('header-container');
-      headerContainer.innerHTML = `
-        <div class="brand-area">
-          <span class="badge">Strategy Planning Partner</span>
-          <h1 class="brand-title">${DASHBOARD_DATA.tfInfo.title}</h1>
-        </div>
-        <div class="vision-box">
-          <span class="vision-label">Vision</span>
-          <span class="vision-text">${DASHBOARD_DATA.vision}</span>
-          <span class="data-asof-line"><span class="data-asof">${DASHBOARD_DATA.dataAsOf || ""}</span> · <a class="sheet-edit-link" href="${SHEET_EDIT_URL}" target="_blank" rel="noopener">📊 데이터 수정</a></span>
-        </div>
-      `;
-
-      // 2. KPI 렌더링
-      const kpiContainer = document.getElementById('kpi-container');
-      kpiContainer.innerHTML = DASHBOARD_DATA.kpis.map(kpi => `
-        <div class="glass-card kpi-card">
-          <span class="kpi-title">${kpi.title}</span>
-          <div class="kpi-value-container">
-            <span class="kpi-value">${kpi.value}</span>
-            <span class="kpi-unit">${kpi.unit}</span>
-          </div>
-          <p class="kpi-desc">${kpi.desc}</p>
-        </div>
-      `).join('');
-
-      // 3. TF 요약 정보 렌더링
-      const tfSummaryContainer = document.getElementById('tf-summary-container');
-      tfSummaryContainer.innerHTML = `
-        <div>
-          <h3 class="tf-summary-title">🏛️ ${DASHBOARD_DATA.tfInfo.title}</h3>
-          <ul class="tf-info-list">
-            <li class="tf-info-item">
-              <span class="tf-info-label">설립 목적</span>
-              <span class="tf-info-val">${DASHBOARD_DATA.tfInfo.purpose}</span>
-            </li>
-            <li class="tf-info-item">
-              <span class="tf-info-label">조직 구성</span>
-              <span class="tf-info-val">${DASHBOARD_DATA.tfInfo.structure}</span>
-            </li>
-            <li class="tf-info-item">
-              <span class="tf-info-label">운영 인력</span>
-              <span class="tf-info-val">${DASHBOARD_DATA.tfInfo.members}</span>
-            </li>
-            <li class="tf-info-item">
-              <span class="tf-info-label">운영 기간</span>
-              <span class="tf-info-val">${DASHBOARD_DATA.tfInfo.period}</span>
-            </li>
-          </ul>
-        </div>
-        <div style="margin-top: 1.5rem; border-top: 2px solid #cbd5e1; padding-top: 1rem;">
-          <span style="font-size:0.75rem; font-weight:800; color:var(--text-dark); text-transform:uppercase; letter-spacing:1.2px; display:block; margin-bottom:0.5rem;">추진 경과</span>
-          <div style="display:flex; flex-direction:column; gap:0.4rem; max-height: 120px; overflow-y: auto; padding-right:0.3rem;">
-            ${DASHBOARD_DATA.tfInfo.history.map(h => `
-              <div style="display:flex; font-size:0.8rem; gap:0.6rem;">
-                <span style="color:var(--primary); font-weight:800; min-width:55px;">${h.date}</span>
-                <span style="color:var(--text-muted);">${h.event}</span>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `;
-
-      // 4. 선순환 실행체계 흐름 렌더링
-      const ecosystemContainer = document.getElementById('ecosystem-container');
-      ecosystemContainer.innerHTML = DASHBOARD_DATA.ecosystemFlow.steps.map(step => `
-        <div class="ecosystem-step-card">
-          <span class="step-badge">${step.phase}</span>
-          <h4 class="step-title">${step.title}</h4>
-          <p class="step-desc">${step.desc}</p>
-        </div>
-      `).join('');
-
-      // 5. 3대 전략 체계 기둥 렌더링
-      const strategyPillarsContainer = document.getElementById('strategy-pillars-container');
-      strategyPillarsContainer.innerHTML = DASHBOARD_DATA.pillars.map(pillar => `
-        <div class="glass-card pillar-card ${pillar.class}">
-          <div>
-            <div class="pillar-header">
-              <div class="pillar-icon">${pillar.icon}</div>
-              <h4 class="pillar-title">${pillar.title}</h4>
-            </div>
-            <p class="pillar-desc">${pillar.desc}</p>
-          </div>
-          <div>
-            <span class="pillar-items-title">주요 실행 과제</span>
-            <ul class="pillar-list">
-              ${pillar.details.map(detail => `
-                <li class="pillar-item">${detail}</li>
-              `).join('')}
-            </ul>
-          </div>
-        </div>
-      `).join('');
-
-      // 6. 중장기 로드맵 타임라인 렌더링
-      const roadmapContainer = document.getElementById('roadmap-timeline-container');
-      roadmapContainer.innerHTML = DASHBOARD_DATA.roadmap.map(node => `
-        <div class="roadmap-node">
-          <div class="roadmap-marker"></div>
-          <div class="roadmap-time-label">
-            <span class="time-year">${node.year}</span>
-            <span class="time-phase">${node.phase}</span>
-          </div>
-          <div class="roadmap-body">
-            <h4 class="roadmap-goal">${node.goal}</h4>
-            <div class="roadmap-tasks-grid">
-              <div class="roadmap-task-box">
-                <span class="task-box-title">외부 협업</span>
-                <p class="task-box-desc">${node.tasks.external}</p>
-              </div>
-              <div class="roadmap-task-box">
-                <span class="task-box-title">내부 거버넌스</span>
-                <p class="task-box-desc">${node.tasks.internal}</p>
-              </div>
-              <div class="roadmap-task-box">
-                <span class="task-box-title">문화 확산</span>
-                <p class="task-box-desc">${node.tasks.culture}</p>
-              </div>
-              <div class="roadmap-task-box">
-                <span class="task-box-title">성과 관리</span>
-                <p class="task-box-desc">${node.tasks.performance}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      `).join('');
-
-      // 7. 오픈랩 운영 절차 및 지원사항 렌더링
-      const openlabProcessContainer = document.getElementById('openlab-process-container');
-      openlabProcessContainer.innerHTML = DASHBOARD_DATA.openLab.process.map((p, idx) => `
-        <div style="display:flex; gap:0.8rem; background:#ffffff; border:1px solid #e2e8f0; padding:0.8rem; border-radius:6px; align-items:center;">
-          <span style="font-size:1.1rem; font-weight:900; color:var(--accent-1); min-width:25px;">0${idx+1}</span>
-          <div>
-            <strong style="font-size:0.88rem; display:block; color:var(--text-main);">${p.step}</strong>
-            <span style="font-size:0.8rem; color:var(--text-muted);">${p.desc}</span>
-          </div>
-        </div>
-      `).join('');
-
-      const openlabSupportContainer = document.getElementById('openlab-support-container');
-      openlabSupportContainer.innerHTML = DASHBOARD_DATA.openLab.support.map(s => {
-        const isNote = s.startsWith('※');
-        const color = isNote ? 'var(--text-dark)' : 'var(--text-muted)';
-        const style = isNote ? 'font-style:italic; font-size:0.78rem;' : 'font-size:0.83rem;';
-        return `
-          <li style="display:flex; gap:0.5rem; ${style} color:${color}; line-height:1.4; margin-bottom:0.4rem;">
-            <span>${isNote ? '•' : '✓'}</span>
-            <span>${s}</span>
-          </li>
-        `;
-      }).join('');
-
-      // 8. 대학 직접 파트너십 렌더링
-      const univContainer = document.getElementById('univ-partnerships-container');
-      univContainer.innerHTML = DASHBOARD_DATA.academicPartnerships.map(univ => `
-        <div class="univ-card">
-          <span class="univ-name">${univ.univ}</span>
-          <span class="univ-fields">${univ.fields}</span>
-        </div>
-      `).join('');
-
-      // 9. AI 윤리 7대 원칙 렌더링
-      const ethicsContainer = document.getElementById('ethics-container');
-      ethicsContainer.innerHTML = DASHBOARD_DATA.ethicsPrinciples.map(rule => `
-        <div class="ethics-card">
-          <span class="ethics-tag">${rule.category}</span>
-          <h4 class="ethics-title">${rule.title}</h4>
-          <p class="ethics-desc">${rule.desc}</p>
-        </div>
-      `).join('');
-
-      // 10. AI법 및 개인정보보호법 렌더링
-      const lawActContainer = document.getElementById('law-act-container');
-      lawActContainer.innerHTML = DASHBOARD_DATA.governanceCompliance.aiAct.map(act => `
-        <tr>
-          <td style="font-weight:800; color:var(--primary);">${act.duty}</td>
-          <td style="color:var(--text-muted);">${act.target}</td>
-          <td>${act.content}</td>
-        </tr>
-      `).join('');
-
-      const privacyTitleContainer = document.getElementById('privacy-title-container');
-      privacyTitleContainer.innerText = DASHBOARD_DATA.governanceCompliance.privacyAct.title;
-
-      const privacyActContainer = document.getElementById('privacy-act-container');
-      privacyActContainer.innerHTML = DASHBOARD_DATA.governanceCompliance.privacyAct.rights.map(r => `
-        <tr>
-          <td style="font-weight:800; color:var(--accent-2); width:130px;">${r.name}</td>
-          <td>${r.desc}</td>
-        </tr>
-      `).join('');
-
-      // 11. 거버넌스 단계별 절차 렌더링
-      const complianceProcessContainer = document.getElementById('compliance-process-container');
-      complianceProcessContainer.innerHTML = DASHBOARD_DATA.governanceCompliance.complianceProcess.map((proc, idx) => `
-        <div class="compliance-box">
-          <div class="compliance-step">STAGE 0${idx+1}</div>
-          <h4 class="compliance-title">${proc.step}</h4>
-          <p class="compliance-desc">${proc.desc}</p>
-        </div>
-      `).join('');
-
-      // 12. 문화 확산 콘텐츠 렌더링
-      const cultureCampaignsContainer = document.getElementById('culture-campaigns-container');
-      cultureCampaignsContainer.innerHTML = DASHBOARD_DATA.cultureCampaign.map(camp => `
-        <div class="culture-card">
-          <div class="culture-card-header">
-            <h4 class="culture-card-title">${camp.title}</h4>
-           
-          </div>
-          <p class="culture-card-desc">${camp.desc}</p>
-        </div>
-      `).join('');
-
-      // 13. 유관기관 매핑 테이블 렌더링
-      const stakeholdersContainer = document.getElementById('stakeholders-container');
-      stakeholdersContainer.innerHTML = DASHBOARD_DATA.stakeholders.map(s => `
-        <tr>
-          <td style="font-weight:800; color:var(--accent-3);">${s.category}</td>
-          <td style="font-weight:800; color:var(--text-main);">${s.name}</td>
-          <td style="color:var(--text-muted);">${s.desc}</td>
-        </tr>
-      `).join('');
-    }
-
-    // =================================================================================
-    // 탭 듀얼 제어 함수 (Tab switching logic)
-    // =================================================================================
-    function switchTab(tabId) {
-      // 모든 탭 컨텐츠 숨기기
-      const contents = document.querySelectorAll('.tab-content');
-      contents.forEach(content => content.classList.remove('active'));
-
-      // 모든 탭 버튼 비활성화
-      const buttons = document.querySelectorAll('.tab-btn');
-      buttons.forEach(btn => btn.classList.remove('active'));
-
-      // 선택된 탭 활성화
-      document.getElementById(tabId).classList.add('active');
-
-      // 클릭한 버튼 활성화
-      const clickedBtn = Array.from(buttons).find(btn => btn.getAttribute('onclick').includes(tabId));
-      if (clickedBtn) {
-        clickedBtn.classList.add('active');
-      }
-    }
-
-    // 초기 실행
-    window.addEventListener('DOMContentLoaded', () => {
-      initDashboard();
-    });
-  </script>
+  <script src="university-data.js"></script>
+  <script src="dashboard.js"></script>
 </body>
 </html>
